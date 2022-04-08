@@ -16,3 +16,19 @@
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
+
+// Using Plateau Prefix
+$router->group(['prefix' => '/plateau'], function() use ($router)
+{
+    $router->get('/list', 'PlateauController@list');
+    $router->post('/create', 'PlateauController@create');
+});
+
+// Using Rover Prefix
+$router->group(['prefix' => 'rover'], function() use ($router)
+{
+    $router->get('/list', 'RoverController@list');
+    $router->post('/create', 'RoverController@create');
+    $router->get('/getState', 'RoverController@getState');
+    $router->put('/setState', 'RoverController@setState');
+});
