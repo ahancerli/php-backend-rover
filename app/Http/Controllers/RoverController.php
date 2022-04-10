@@ -127,6 +127,7 @@ class RoverController extends BaseController
                                    if ($returnData) {
                                        return response()->json($returnData, $returnData->getStatusCode());
                                    }
+                                   return response()->json("Rover Moved in Designated Directions",200);
                                } catch (Exception $e) {
                                    response()->json($e, 500);
                                }
@@ -137,6 +138,7 @@ class RoverController extends BaseController
                                   if ($returnData) {
                                       return response()->json($returnData, $returnData->getStatusCode());
                                   }
+                                   return response()->json("Rover Moved in Designated Directions",200);
                                }catch (Exception $e) {
                                    response()->json($e, 500);
                                }
@@ -157,7 +159,6 @@ class RoverController extends BaseController
         } else {
             return response()->json("Rover is Not Found",404);
         }
-        return response()->json("Rover Moved in Designated Directions",200);
     }
 
     /**
