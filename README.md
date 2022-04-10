@@ -22,3 +22,23 @@ If you discover a security vulnerability within Lumen, please send an e-mail to 
 ## License
 
 The Lumen framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## Project
+
+Proje kısaca bahsedecek olursak;
+Proje de bir Plato sabit boyutlu bir plato oluşturma ve oluşan bu platoya robotlar indirerek bu robotları plato yüzeyinde setState metoduna gönderdiğimiz komutlar ile hareket ettirmektir.
+
+Proje içerisinde
+createPlato : Plato oluşturma endpoint'dir. Bu endpoint e zorunlu alanlar gönderilerek plato oluşturmak hedeflenmiştir.
+getPlato : Tüm platoların çekildiği servistir.
+
+createRover : Belirli bir platoya indirilmek üzere oluşturulan robottur.
+getRover: Var olan tüm robotların çekildiği servistir.
+getState : Bu method bize string bir ifade döndürmektedir. ve dönen değer içerisinde robotun plato üzerindeki konumu ve kordinantları yer almaktadır
+setState: Bu platoya parametre olarak girilen command'ler ile robot plato üzerinde hareketi hedeflenmiştir.Bu servisin kontrol ettiği noktalar sayesinde robot plato yüzeyinde kalmakta olup ilgili test caseler unit teste eklenmiştir
+Eğer robotu belirli kordinant sistemi dışarısına çıkardığımızda yani onunla ilgili komut verdiğimizde sistem hata yansıtmaktadır.
+Bir komut girilmediğinde hata yansıtmaktadır
+hatalı komut girildiğinde ('L,M,R' dışında) sistem hata verecek şekilde düzenlenmiştir.
+
+

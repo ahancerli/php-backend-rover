@@ -74,13 +74,13 @@ trait RoverControllerHelper
     {
         switch ($roverRequest['direction']) {
             case 'N':
-                return $this->updateDirectorWest($roverRequest['id']);
+                return $this->updateDirectors($roverRequest['id'], 'W');
             case 'S':
-                return $this->updateDirectorEast($roverRequest['id']);
+                return $this->updateDirectors($roverRequest['id'], 'E');
             case 'E':
-                return $this->updateDirectorNorth($roverRequest['id']);
+                return $this->updateDirectors($roverRequest['id'], 'N');
             case 'W':
-                return $this->updateDirectorSouth($roverRequest['id']);
+                return $this->updateDirectors($roverRequest['id'], 'S');
         }
     }
 
@@ -88,47 +88,20 @@ trait RoverControllerHelper
     {
         switch ($roverRequest['direction']) {
             case 'N':
-                return $this->updateDirectorEast($roverRequest['id']);
+                return $this->updateDirectors($roverRequest['id'], 'E');
             case 'S':
-                return $this->updateDirectorWest($roverRequest['id']);
+                return $this->updateDirectors($roverRequest['id'], 'W');
             case 'E':
-                return$this->updateDirectorSouth($roverRequest['id']);
+                return$this->updateDirectors($roverRequest['id'], 'S');
             case 'W':
-                return $this->updateDirectorNorth($roverRequest['id']);
+                return $this->updateDirectors($roverRequest['id'], 'N');
         }
     }
 
-    private function updateDirectorNorth($id)
+    private function updateDirectors($id, $paramDirector)
     {
         try {
-            Rover::where('id',$id)->update(['direction' => 'N']);
-        } catch (Exception $e) {
-            return response()->json($e, 500);
-        }
-    }
-
-    private function updateDirectorSouth($id)
-    {
-        try {
-            Rover::where('id',$id)->update(['direction' => 'S']);
-        } catch (Exception $e) {
-            return response()->json($e, 500);
-        }
-    }
-
-    private function updateDirectorWest($id)
-    {
-        try {
-            Rover::where('id',$id)->update(['direction' => 'W']);
-        } catch (Exception $e) {
-            return response()->json($e, 500);
-        }
-    }
-
-    private function updateDirectorEast($id)
-    {
-        try {
-            Rover::where('id',$id)->update(['direction' => 'E']);
+            Rover::where('id',$id)->update(['direction' => $paramDirector]);
         } catch (Exception $e) {
             return response()->json($e, 500);
         }
