@@ -29,6 +29,6 @@ $router->group(['prefix' => 'rover'], function() use ($router)
 {
     $router->get('/list', 'RoverController@list');
     $router->post('/create', 'RoverController@create');
-    $router->get('/getState', 'RoverController@getState');
-    $router->put('/setState', 'RoverController@setState');
+    $router->get('/getState{id}', 'RoverController@getState');
+    $router->put('/setState/{id}', 'RoverController@setState');
 });
