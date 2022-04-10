@@ -12,6 +12,6 @@ class Rover extends Model
 
     public function plateau()
     {
-        return $this->hasOne(Plateau::class,'id','plateauId');
+        return $this->hasOne(Plateau::class,'plateauId','id');
     }
 }

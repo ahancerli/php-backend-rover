@@ -2,15 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Plateau;
 use App\Models\Rover;
+use App\Traits\RoverControllerHelper;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use mysql_xdevapi\Exception;
-use function PHPUnit\Framework\throwException;
 
 class RoverController extends BaseController
 {
-    public function list()
+
+    use RoverControllerHelper;
+
+    /**
+     * List Plateau
+     *
+     * @return JsonResponse
+     */
+    public function list(): JsonResponse
     {
         try {
             $rover =  Rover::all();
@@ -20,12 +31,35 @@ class RoverController extends BaseController
         }
     }
 
-    public function create(Request $request)
+    /**
+     * Create New Plateau
+     *
+     * @param Request $request
+     * @return JsonResponse
+     * @throws ValidationException
+     */
+    public function create(Request $request): JsonResponse
     {
+        $this->validate($request, [
+            'name' => 'required',
+            'plateauId' => 'required|numeric',
+            'xCoordinate' => 'numeric|max:32',
+            'yCoordinate' => 'numeric|max:64',
+        ]);
+
+        $createLocationRover = json_encode(['x'=>(int)$request->input('xCoordinate'),'y'=> (int)$request->input('yCoordinate')]);
+        $plateu = Plateau::findOrFail($request->input('plateauId'));
+
+        if ($plateu)
+            $plateuId = $request->input('plateauId');
+        else
+            return response()->json("Plato is Not Found",500);
+
+
         $roverRequest = new Rover();
         $roverRequest->name = $request->input('name');
-        $roverRequest->plateauId = $request->input('plateauId');
-        $roverRequest->location = $request->input('location');
+        $roverRequest->plateauId = $plateuId;
+        $roverRequest->location = $createLocationRover;
 
         try {
             $roverRequest->save();
@@ -35,46 +69,103 @@ class RoverController extends BaseController
         }
     }
 
-    public function getState($id)
-    {
+    /**
+     * Create New Plateau
+     *
+     * @param $id
+     * @return JsonResponse
+     */
 
+    /**
+     * Create New Plateau
+     *
+     * @param $id
+     * @return JsonResponse
+     */
+    public function getState($id): JsonResponse
+    {
+        try {
+            $roverData = $this->getRover($id)->getAttributes();
+            $name = $roverData['name'];
+            $location = $roverData['location'];
+            $direction = $roverData['direction'];
+        } catch (Exception $e) {
+            return response()->json($e,500);
+        }
+
+        try {
+            $plateuData = Plateau::findOrFail($roverData['plateauId'])->getAttributes();
+            $plateauName = $plateuData['name'];
+        } catch (Exception $e) {
+            return response()->json($e,500);
+        }
+
+        return response()->json("$name Rover'ı $plateauName Platosunda  $direction yönünde $location kordinantlarında yer almaktadır" ,200);
     }
 
-    public function setState(Request $request, $id)
+    /**
+     * Create New Plateau
+     *
+     * @param Request $request
+     * @param $id
+     * @return JsonResponse
+     */
+    public function setState(Request $request, $id): JsonResponse
     {
         $roverRequest = $this->getRover($id);
-
         if (!empty($roverRequest))
         {
-            $commands = $request->input('commands');
-            if (!empty($commands)) {
+            if ($request->has('commands')) {
+                $commands = $request->input('commands');
                 $commandArray = $this->smashCommand($commands);
                 if (count($commandArray) > 0) {
                     foreach ($commandArray as $command) {
                         if ($this->validCommand($command)) {
                            if($command == 'L' || $command == "R") {
-                               $this->updateDirector($id, $command);
+                               try {
+                                   $returnData = $this->updateDirector($id, $command);
+                                   if ($returnData) {
+                                       return response()->json($returnData, $returnData->getStatusCode());
+                                   }
+                               } catch (Exception $e) {
+                                   response()->json($e, 500);
+                               }
+
                            } elseif ($command == 'M') {
-                               $this->editLocation($id);
+                               try {
+                                  $returnData =  $this->editLocation($id);
+                                  if ($returnData) {
+                                      return response()->json($returnData, $returnData->getStatusCode());
+                                  }
+                               }catch (Exception $e) {
+                                   response()->json($e, 500);
+                               }
                            }
                         } else {
                             return response()->json("$command komut okunamadı",404);
                         }
                     }
+
                 } else {
-                    return response()->json("Commend is Not Found",404);
+                    return response()->json("Command is Not Found",404);
                 }
 
             } else {
-                return response()->json("Commend is Not Found",404);
+                return response()->json("Command is Not Found",404);
             }
 
         } else {
             return response()->json("Rover is Not Found",404);
         }
+        return response()->json("Rover Moved in Designated Directions",200);
     }
 
-    private function getRover($id)
+    /**
+     * Create New Plateau
+     *
+     * @param $id
+     */
+    public function getRover($id)
     {
         try {
             return Rover::where('id', $id)->first();
@@ -82,188 +173,4 @@ class RoverController extends BaseController
             return response()->json($e,500);
         }
     }
-
-    private function smashCommand(string $commands): array
-    {
-        $commandsArray = [];
-        $commandsArray = str_split($commands);
-        return $commandsArray;
-    }
-
-    private function validCommand(string $commends): bool
-    {
-        if ($commends == "L" || $commends == "M" || $commends == "R") {
-            return true;
-        }
-        return false;
-    }
-
-    private function updateDirector($id, $director)
-    {
-        $roverData = $this->getRover($id);
-        $roverRequest = $roverData->getAttributes();
-
-        if ($director == "L")
-        {
-            $this->findDirectorLeft($roverRequest);
-        }
-        if ($director == "R")
-        {
-            $this->findDirectorRight($roverRequest);
-        }
-    }
-
-    private function editLocation($id)
-    {
-        $roverData = $this->getRover($id);
-        $roverRequest = $roverData->getAttributes();
-        $xValue = json_decode($roverRequest['location'])->x;
-        $yValue = json_decode($roverRequest['location'])->y;
-
-        if($roverRequest['direction'] == "E" || $roverRequest['direction'] == "W") {
-            if ($roverRequest['direction'] == "E") {
-                $this->CalculateXPlusCoordinate($roverRequest, $xValue);
-            } elseif ($roverRequest['direction'] == "W") {
-                $this->CalculateXMinorCoordinate($roverRequest, $xValue);
-            }
-        } elseif ($roverRequest['direction'] == "S" || $roverRequest['direction'] == "N") {
-            if ($roverRequest['direction'] == "N") {
-                $this->CalculateYPlusCoordinate($roverRequest, $yValue);
-            } elseif ($roverRequest['direction'] == "S") {
-                $this->CalculateYMinorCoordinate($roverRequest, $yValue);
-            }
-        }
-    }
-
-    private function updateLocation($data, $location)
-    {
-        try {
-            Rover::where('id',$data['id'])->update(['location' => $location]);
-        } catch (Exception $e) {
-            response()->json($e, 500);
-            return;
-        }
-    }
-
-    private function findDirectorLeft($roverRequest)
-    {
-        switch ($roverRequest['direction']) {
-            case 'N':
-                $this->updateDirectorWest($roverRequest['id']);
-                break;
-            case 'S':
-                $this->updateDirectorEast($roverRequest['id']);
-                break;
-            case 'E':
-                $this->updateDirectorNorth($roverRequest['id']);
-                break;
-            case 'W':
-                $this->updateDirectorSouth($roverRequest['id']);
-                break;
-        }
-    }
-    private function findDirectorRight($roverRequest)
-    {
-        switch ($roverRequest['direction']) {
-            case 'N':
-                $this->updateDirectorEast($roverRequest['id']);
-                break;
-            case 'S':
-                $this->updateDirectorWest($roverRequest['id']);
-                break;
-            case 'E':
-                $this->updateDirectorSouth($roverRequest['id']);
-                break;
-            case 'W':
-                $this->updateDirectorNorth($roverRequest['id']);
-                break;
-        }
-    }
-
-
-    private function updateDirectorNorth($id)
-    {
-        try {
-            Rover::where('id',$id)->update(['direction' => 'N']);
-            return response()->json('Director Updated N',200);
-        } catch (Exception $e) {
-            return response()->json($e, 500);
-        }
-    }
-
-    private function updateDirectorSouth($id)
-    {
-        try {
-            Rover::where('id',$id)->update(['direction' => 'S']);
-            return response()->json('Director Updated S',200);
-        } catch (Exception $e) {
-            return response()->json($e, 500);
-        }
-    }
-
-    private function updateDirectorWest($id)
-    {
-        try {
-            Rover::where('id',$id)->update(['direction' => 'W']);
-            return response()->json('Director Updated W',200);
-        } catch (Exception $e) {
-            return response()->json($e, 500);
-        }
-    }
-
-    private function updateDirectorEast($id)
-    {
-        try {
-            Rover::where('id',$id)->update(['direction' => 'E']);
-            return response()->json('Director Updated E',200);
-        } catch (Exception $e) {
-            return response()->json($e, 500);
-        }
-    }
-
-    public function CalculateXPlusCoordinate($data, $params)
-    {
-        if($params <  32) {
-            $params = $params + 1;
-            $location = ['x'=> $params, 'y'=>json_decode($data['location'])->y];
-            $this->updateLocation($data,$location);
-        } else {
-            response()->json("You cannot enter a value greater than 32.", 500);
-        }
-    }
-
-    public function CalculateXMinorCoordinate($data, $params)
-    {
-        if($params > 0) {
-            $params = $params - 1;
-            $location = ['x'=> $params, 'y'=>json_decode($data['location'])->y];
-            $this->updateLocation($data,$location);
-        } else {
-            response()->json("cannot be less than 0", 500);
-        }
-    }
-
-    public function CalculateYPlusCoordinate($data, $params)
-    {
-        if($params < 64) {
-            $params = $params + 1;
-            $location = ['x'=> json_decode($data['location'])->x, 'y'=>$params];
-            $this->updateLocation($data,$location);
-        } else {
-            response()->json("You cannot enter a value greater than 64.", 500);
-        }
-    }
-
-    public function CalculateYMinorCoordinate($data, $params)
-    {
-        if($params > 0) {
-            $params = $params - 1;
-            $location = ['x'=> json_decode($data['location'])->x, 'y'=>$params];
-            $this->updateLocation($data,$location);
-        } else {
-            print_r('burasdas');
-            response()->json("cannot be less than 0", 500);
-        }
-    }
-
 }

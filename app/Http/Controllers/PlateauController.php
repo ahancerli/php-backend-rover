@@ -3,13 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plateau;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use mysql_xdevapi\Exception;
 
 class PlateauController extends BaseController
 {
-    public function list()
+
+    /**
+     * List Plateau
+     *
+     * @return JsonResponse
+     */
+    public function list(): JsonResponse
     {
         try {
             $plateau =  Plateau::all();
@@ -23,13 +31,23 @@ class PlateauController extends BaseController
     /**
      * Create New Plateau
      *
-     * @param  Request  $request
+     * @param Request $request
+     * @return JsonResponse
+     * @throws ValidationException
      */
-    public function create(Request $request)
+    public function create(Request $request): JsonResponse
     {
+        $this->validate($request, [
+            'name' => 'required',
+            'xCoordinate' => 'numeric|min:32',
+            'yCoordinate' => 'numeric|min:64'
+        ]);
+
+        $createRegionPlateau = json_encode(['x'=>$request->input('xCoordinate'),'y'=> $request->input('yCoordinate')]);
+
         $plateauRequest = new Plateau();
         $plateauRequest->name = $request->input('name');
-        $plateauRequest->region= $request->input('region');
+        $plateauRequest->region= $createRegionPlateau;
 
         try {
             $plateauRequest->save();
