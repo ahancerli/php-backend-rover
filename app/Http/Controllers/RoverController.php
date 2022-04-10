@@ -17,7 +17,7 @@ class RoverController extends BaseController
     use RoverControllerHelper;
 
     /**
-     * List Plateau
+     * List Rover
      *
      * @return JsonResponse
      */
@@ -32,7 +32,7 @@ class RoverController extends BaseController
     }
 
     /**
-     * Create New Plateau
+     * Create New Rover
      *
      * @param Request $request
      * @return JsonResponse
@@ -77,7 +77,7 @@ class RoverController extends BaseController
      */
 
     /**
-     * Create New Plateau
+     * set Rover State
      *
      * @param $id
      * @return JsonResponse
@@ -104,7 +104,7 @@ class RoverController extends BaseController
     }
 
     /**
-     * Create New Plateau
+     * Create New Rover
      *
      * @param Request $request
      * @param $id
@@ -161,7 +161,7 @@ class RoverController extends BaseController
     }
 
     /**
-     * Create New Plateau
+     * get rover
      *
      * @param $id
      */
