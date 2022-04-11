@@ -77,8 +77,10 @@ class ProjectTest extends TestCase
     public function testCreateRover()
     {
         $parameters = [
-            'product_name' => 'Infinix',
-            'product_description' => 'NOTE 4 5.7-Inch IPS LCD (3GB, 32GB ROM) Android 7.0 ',
+            'name' => 'Infinix',
+            'location' => '{"x":32,"y":64}',
+            'plateauId' => 1,
+            'direction' => 'N',
         ];
         $this->post("/rover/create", $parameters, []);
         $this->seeStatusCode(200);
@@ -86,7 +88,9 @@ class ProjectTest extends TestCase
             ['data' =>
                 [
                     'name',
-                    'region',
+                    'location',
+                    'plateauId',
+                    'direction',
                     'updated_at',
                     'created_at',
                     'id'
